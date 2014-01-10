@@ -51,12 +51,12 @@
 	 <tr ${stat.even ? '' : 'class=""'}>
         <td align="center">
           <label class="checkbox inline">
-            <input type="checkbox" name=_checkItem value="${item.schedulerName}" onclick="$('#_checkAll').checkAll(false);"> ${stat.count }
+            <input type="checkbox" name=_checkItem value="${item.node}" onclick="$('#_checkAll').checkAll(false);"> ${stat.count }
           </label>
         </td>
         <td align="center">
           <s:property value="schedulerName"/><br />
-          <s:property value="node"/>
+          <s:property value="schedulerInstanceId"/>
         </td>
         <td align="center">
           Version: <s:property value="version"/>

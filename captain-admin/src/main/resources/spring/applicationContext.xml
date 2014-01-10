@@ -22,6 +22,7 @@
 			<list>
 				<value>classpath:jdbc.properties</value>
 				<value>classpath:application.properties</value>
+				<value>classpath:quartz.properties</value>
 			</list>
 		</property>
 		<property name="placeholderPrefix" value="${" />

@@ -1,7 +1,6 @@
 package com.c306.core.quartz.scheduler.action;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,10 +36,12 @@ import org.quartz.core.QuartzSchedulerResources;
 import org.quartz.core.jmx.TriggerSupport;
 import org.quartz.ee.servlet.QuartzInitializerListener;
 import org.quartz.impl.JobDetailImpl;
+import org.quartz.impl.SchedulerRepository;
 import org.quartz.impl.StdScheduler;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.jdbcjobstore.Constants;
 import org.quartz.impl.matchers.GroupMatcher;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.c306.core.CoreConstants;
 import com.c306.core.quartz.ConvenientMBean;
@@ -48,7 +49,10 @@ import com.c306.core.quartz.JobInfo;
 import com.c306.core.quartz.JobInfoSupport;
 import com.c306.core.quartz.JobStoreTX;
 import com.c306.core.quartz.SchedulerInfo;
+import com.c306.core.quartz.SchedulerInstanceUtils;
 import com.c306.core.quartz.TriggerInfo;
+import com.c306.core.quartz.jms.SchedulerClusteredConstants;
+import com.c306.core.quartz.jms.instance.producer.SchedulerInstanceJmsManager;
 import com.c306.utils.BeanPropertyAccessUtils;
 import com.opensymphony.xwork2.ActionContext;
 import com.opensymphony.xwork2.ActionSupport;
@@ -77,6 +81,11 @@ public class SchedulerAction extends ActionSupport {
 	private Map jsonMap = new LinkedMap(1);
 	protected static ObjectMapper objectMapper = new ObjectMapper();
 	
+	/**
+	 * clustered environment instances manage
+	 */
+	@Autowired(required=false)
+	private SchedulerInstanceJmsManager clusteredInstanceManager;
 	
 	
 	/////////////// domain fields //////////////////////////////////
@@ -132,35 +141,44 @@ public class SchedulerAction extends ActionSupport {
 	
 	
 	/****************** scheduler instance *************************************/
+	/**
+	 * 扫描群集环境下所有节点的instance
+	 * @return
+	 */
+	public String instanceScan() {
+		
+		try {
+
+			logger.info("instanceScan ... ");
+			
+			if( this.clusteredInstanceManager == null )
+				throw new RuntimeException(this.getText("clusteredInstanceManager.isnull", "非集群环境或clusteredInstanceManager配置不正确"));
+			
+			this.clusteredInstanceManager.announce();
+			
+			logger.info("instanceScan complete. ");
+			this.success = true;
+			
+		} catch (Exception e) {
+			logger.error("", e);
+//			this.addActionMessage("System Error: "+e.getMessage());
+			this.jsonMap.put("msg", e.getMessage());
+		}
+		return SUCCESS;
+	}
+	
+	/**
+	 * instances 列表
+	 * @return
+	 */
 	public String instanceList() {
 		
 		try {
-			ArrayList<SchedulerInfo> schedulerList = new ArrayList<SchedulerInfo>();
+//			List<SchedulerInfo> schedulerList = SchedulerInstanceUtils.localInstanceList();
+			List<SchedulerInfo> schedulerList = SchedulerInstanceUtils.allClusteredInstanceList();
 			
-			Collection<Scheduler> insList = getSchedulerFactory().getAllSchedulers();
-			for(Scheduler scheduler: insList) {
-				QuartzSchedulerResources qsres = this.getQuartzSchedulerResources(scheduler);
-				SchedulerInfo schedulerInfo = new SchedulerInfo();
-				schedulerInfo.setSchedulerName(qsres.getName());
-				schedulerInfo.setSchedulerInstanceId(qsres.getInstanceId());
-				schedulerInfo.setJobStoreClassName(qsres.getJobStore().getClass().getName());
-//				if( qsres.getJobStore() instanceof org.quartz.simpl.SimpleInstanceIdGenerator )
-				schedulerInfo.setNode(qsres.getInstanceId());
-				schedulerInfo.setStandbyMode(scheduler.isInStandbyMode());
-				schedulerInfo.setStarted(scheduler.isStarted());
-				schedulerInfo.setThreadPoolClassName(qsres.getThreadPool().getClass().getName());
-				schedulerInfo.setThreadPoolSize(qsres.getThreadPool().getPoolSize());
-//				schedulerInfo.setType(type);
-				String version = String.format("%s.%s.%s", QuartzScheduler.getVersionMajor(), QuartzScheduler.getVersionMinor(),
-                        QuartzScheduler.getVersionIteration());
-				schedulerInfo.setVersion(version);
-
-				logger.info(schedulerInfo);
-				schedulerList.add(schedulerInfo);
-			}
-			
-            HttpServletRequest request = (HttpServletRequest) ActionContext.getContext().get(StrutsStatics.HTTP_REQUEST);
-            request.setAttribute("schedulerList", schedulerList);
+			HttpServletRequest request = (HttpServletRequest) ActionContext.getContext().get(StrutsStatics.HTTP_REQUEST);
+			request.setAttribute("schedulerList", schedulerList);
 		} catch (Exception e) {
 			logger.error("", e);
 			this.addActionMessage("System Error: "+e.getMessage());
@@ -175,8 +193,19 @@ public class SchedulerAction extends ActionSupport {
 
 			logger.warn("pauseInstance keys: " + keys);
 			for( String key : keys.split(",") ) {
-				Scheduler scheduler = this.getSchedulerFactory().getScheduler(key);
-				scheduler.standby();
+				
+				if( this.clusteredInstanceManager == null ) {
+					
+//					Scheduler scheduler = this.getSchedulerFactory().getScheduler(key);
+//					Scheduler scheduler = SchedulerRepository.getInstance().lookup(key);
+//					scheduler.standby();
+					SchedulerInstanceUtils.pauseInstance(key);
+					
+				} else {
+					// clustered env.
+					this.clusteredInstanceManager.standby(key);
+				}
+				
 				logger.warn("standby scheduler: " + key);
 			}
 
@@ -199,8 +228,19 @@ public class SchedulerAction extends ActionSupport {
 
 			logger.warn("resumeInstance keys: " + keys);
 			for( String key : keys.split(",") ) {
-				Scheduler scheduler = this.getSchedulerFactory().getScheduler(key);
-				scheduler.start();
+				
+				if( this.clusteredInstanceManager == null ) {
+
+//					Scheduler scheduler = this.getSchedulerFactory().getScheduler(key);
+//					Scheduler scheduler = SchedulerRepository.getInstance().lookup(key);
+//					scheduler.start();
+					SchedulerInstanceUtils.resumeInstance(key);
+					
+				} else {
+					// clustered env.
+					this.clusteredInstanceManager.resume(key);
+				}
+				
 				logger.warn("restart scheduler: " + key);
 			}
 
