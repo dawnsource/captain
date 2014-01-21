@@ -18,6 +18,7 @@ import org.springframework.security.web.access.intercept.DefaultFilterInvocation
 import org.springframework.security.web.access.intercept.FilterInvocationSecurityMetadataSource;
 import org.springframework.security.web.access.intercept.RequestKey;
 import org.springframework.security.web.util.AntPathRequestMatcher;
+import org.springframework.security.web.util.RegexRequestMatcher;
 import org.springframework.security.web.util.RequestMatcher;
 
 public class JdbcFilterInvocationDefinitionSourceFactoryBean extends
@@ -46,12 +47,12 @@ public class JdbcFilterInvocationDefinitionSourceFactoryBean extends
 			String url = resource.getUrl();
 			String role = resource.getRole();
 			
-			RequestMatcher key = new AntPathRequestMatcher(url);
+			RequestMatcher key = resource.getMatchType().equalsIgnoreCase("ant") ? new AntPathRequestMatcher(url) : new RegexRequestMatcher(url, null) ;
 			
 			if (requestMap.containsKey(key)) {
 				requestMap.get(key).add(new SecurityConfig(role.trim()));
 			} else {
-				requestMap.put(new AntPathRequestMatcher(url), SecurityConfig.createList(role));
+				requestMap.put(key, SecurityConfig.createList(role));
 			}
 		}
 		
@@ -124,12 +125,20 @@ public class JdbcFilterInvocationDefinitionSourceFactoryBean extends
 	}
 
 	private class Resource {
+		private String matchType = "ant";// request-matcher="regex" or request-matcher="ant", default is ant
 		private String url;
 		private String role;
-
-		public Resource(String url, String role) {
+//
+//		public Resource(String url, String role) {
+//			this.url = url;
+//			this.role = role;
+//		}
+		
+		public Resource(String url, String role, String matchType) {
 			this.url = url;
 			this.role = role;
+			if( matchType != null )
+				this.matchType = matchType.trim().toUpperCase();
 		}
 
 		public String getUrl() {
@@ -138,6 +147,10 @@ public class JdbcFilterInvocationDefinitionSourceFactoryBean extends
 
 		public String getRole() {
 			return role;
+		}
+		
+		public String getMatchType() {
+			return matchType;
 		}
 	}
 
@@ -150,7 +163,8 @@ public class JdbcFilterInvocationDefinitionSourceFactoryBean extends
 		protected Resource mapRow(ResultSet rs, int rownum) throws SQLException {
 			String url = rs.getString(1);
 			String role = rs.getString(2);
-			Resource resource = new Resource(url, role);
+			String matchType = rs.getString(3);
+			Resource resource = new Resource(url, role, matchType);
 
 			return resource;
 		}

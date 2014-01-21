@@ -84,7 +84,10 @@
 </form>
 
 <p></p>
-<p style="float: right;">Client Default TimeZone: <a href="${ctx}/common/sysinfo.jsp"><%=java.util.TimeZone.getDefault().getID() %></a></p>
+<p style="float: right;">
+<a href="javascript:void(0);" onclick="doAjax('${ctx}/quartz/scheduler!instanceScan.action', '');">Scan Instances</a>&nbsp;&nbsp;
+Client Default TimeZone: <a href="${ctx}/common/sysinfo.jsp"><%=java.util.TimeZone.getDefault().getID() %></a>
+</p>
 
 <!-- dialogs -->
 <div style="display:none;">

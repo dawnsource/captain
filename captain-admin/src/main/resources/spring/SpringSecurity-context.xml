@@ -10,28 +10,15 @@
 	<http pattern="/lookfor/**" security="none"></http>
 	<http pattern="/common/**" security="none"></http>
 	<http pattern="/errors/**" security="none"></http>
-	<http pattern="/acegi/login[|.action|.action]*" security="none" path-type="regex"></http><!-- Login Page URL -->
+	<http pattern="/acegi/login[|.action|.action]*" security="none" request-matcher="regex"></http><!-- Login Page URL -->
 
 	<http auto-config="true">
-		<!--
-		<intercept-url pattern="/common/**" filters="none"/>
-		<intercept-url pattern="/css/**" filters="none"/>
-		<intercept-url pattern="/js/**" filters="none"/>
-		<intercept-url pattern="/errors/**" filters="none"/>
-		<intercept-url pattern="/image/**" filters="none"/>
-		<intercept-url pattern="/images/**" filters="none"/>
-		<intercept-url pattern="/upload/temp/**" filters="none"/>
-		<intercept-url pattern="/admin/masonry!gallery.action" filters="none"/>
-		<intercept-url pattern="/admin/secuser!front2manage.action*" filters="none"/>
-		<intercept-url pattern="/admin/upload!any*.action*" filters="none"/>
-		<intercept-url pattern="/acegi/login*" filters="none"/>
-		-->
 		<!-- <intercept-url pattern="/**" filters="none" access="IS_AUTHENTICATED_ANONYMOUSLY"/>只能放在最后 -->
 		<custom-filter before="FILTER_SECURITY_INTERCEPTOR" ref="filterSecurityInterceptor" />
 <!-- 		<custom-filter before="FORM_LOGIN_FILTER" ref="authenticationProcessingFilter" /> -->
 <!-- 		<custom-filter position="REMEMBER_ME_FILTER" ref="rememberMeAuthenticationFilter" /> -->
 		<form-login login-page="/acegi/login" authentication-success-handler-ref="authenticationSuccessHandlerImpl"/>
-		<logout logout-success-url="/acegi/login"/>
+		<logout logout-success-url="/acegi/login" delete-cookies="JSESSIONID,captain"/>
 		<access-denied-handler error-page="/errors/accessDenied.jsp"/>
 		<session-management session-authentication-error-url="/acegi/login" session-fixation-protection="migrateSession">
 			<concurrency-control max-sessions="1" error-if-maximum-exceeded="true" />
@@ -70,7 +57,7 @@
         class="com.c306.core.springsecurity.utils.JdbcFilterInvocationDefinitionSourceFactoryBean">
         <beans:property name="dataSource" ref="dataSource"/>
         <beans:property name="resourceQuery" value="
-            select re.res_string, r.name from sec_role r
+            select re.res_string, r.name, 'ant' as pathtype from sec_role r
               join sec_resc_role rr
                 on r.id=rr.role_id
               join sec_resc re
