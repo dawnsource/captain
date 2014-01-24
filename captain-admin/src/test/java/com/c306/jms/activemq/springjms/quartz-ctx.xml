@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jms="http://www.springframework.org/schema/jms"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+						http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+						http://www.springframework.org/schema/context
+						http://www.springframework.org/schema/context/spring-context-3.2.xsd
+						http://www.springframework.org/schema/jms
+						http://www.springframework.org/schema/jms/spring-jms-3.2.xsd">
+	
+	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:jdbc.properties</value>
+				<value>classpath:application.properties</value>
+				<value>classpath:quartz.properties</value>
+			</list>
+		</property>
+		<property name="placeholderPrefix" value="${" />
+		<property name="placeholderSuffix" value="}" />
+	</bean>
+	
+	<bean id="quartzJmsClusteredProperties" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="locations">
+			<list>
+				<value>classpath:quartz.properties</value>
+			</list>
+		</property>
+	</bean>
+
+	<bean id="quartzJndiTemplate" class="org.springframework.jndi.JndiTemplate">
+		<property name="environment">
+			<props>
+				<prop key="java.naming.factory.initial">${quartz.jms.initialContextFactory.class}</prop>
+				<prop key="java.naming.provider.url">${quartz.jms.url}</prop>
+				<prop key="java.naming.security.principal">${quartz.jms.username}</prop>
+				<prop key="java.naming.security.credentials">${quartz.jms.password}</prop>
+			</props>
+		</property>
+	</bean>
+	<bean id="jndiQuartzConnectionFactory" class="org.springframework.jndi.JndiObjectFactoryBean">
+		<property name="jndiTemplate" ref="quartzJndiTemplate" />
+		<property name="jndiName" value="${quartz.jms.connectionFactory.jndiName}" />
+	</bean>
+	<bean id="quartzConnectionFactory"
+		class="org.springframework.jms.connection.CachingConnectionFactory">
+		<property name="targetConnectionFactory" ref="jndiQuartzConnectionFactory" />
+		<property name="sessionCacheSize" value="1" />
+	</bean>
+	<bean id="destinationResolver"
+		class="org.springframework.jms.support.destination.JndiDestinationResolver">
+		<property name="jndiTemplate" ref="quartzJndiTemplate" />
+		<property name="cache" value="true" />
+		<!-- do not create a dynamic destination if the destination name is not found in JNDI -->
+    	<property name="fallbackToDynamicDestination" value="false"/>
+		
+	</bean>
+	
+	<!-- concurrency must be set '1' . 
+		NOTE: active mq 5.9 do not work in jms:listener-container
+	-->
+	<!-- 
+	<jms:listener-container connection-factory="quartzConnectionFactory" container-type="default" destination-type="topic" concurrency="1"
+		destination-resolver="destinationResolver" cache="auto">
+		<jms:listener destination="${quartz.jms.topic.instance.announcement}" ref="schedulerInstanceAnnouncementReceiver" method="handleMessage" />
+	</jms:listener-container>
+	 -->
+	<bean id="jmsContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+	    <property name="connectionFactory" ref="quartzConnectionFactory"/>
+	    <property name="destinationResolver" ref="destinationResolver"/>
+	    <property name="concurrentConsumers" value="1" />
+	    <!-- <property name="destinationName" value="${quartz.jms.topic.instance.announcement}"/> -->
+	    <property name="destination">
+			<bean id="topicAnnouncement" class="org.apache.activemq.command.ActiveMQTopic">
+				<property name="physicalName" value="${quartz.jms.topic.instance.announcement}"></property>
+			</bean>
+	    </property>
+	    <property name="messageListener" ref="schedulerInstanceAnnouncementReceiver" />
+	    <property name="sessionAcknowledgeModeName" value="AUTO_ACKNOWLEDGE"/>
+	    <property name="pubSubDomain" value="true"/>
+	</bean>
+	
+	<!-- listeners -->
+	<bean id="schedulerInstanceAnnouncementReceiver" class="com.c306.jms.activemq.springjms.SchedulerInstanceAnnouncementReceiver"></bean>
+	
+	
+	
+	
+	<bean id="quartzJmsTemplateForTopic" class="org.springframework.jms.core.JmsTemplate">
+		<property name="connectionFactory" ref="quartzConnectionFactory"/>
+		<property name="destinationResolver" ref="destinationResolver"/>
+		<property name="PubSubDomain" value="true"/>
+		<!-- <property name="defaultDestinationName" value="queue1"/> -->
+	</bean>
+
+	<!-- producer -->
+
+</beans>

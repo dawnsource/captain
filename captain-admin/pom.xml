@@ -60,6 +60,14 @@
 			<version>${urlrewritefilter.version}</version>
 		</dependency>
 		
+        <!-- jms provider -->
+		<dependency>
+		    <groupId>org.apache.activemq</groupId>
+		    <artifactId>activemq-client</artifactId>
+		    <version>5.9.0</version>
+		</dependency>
+
+				
 		
 	</dependencies>
 	

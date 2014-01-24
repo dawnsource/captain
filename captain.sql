@@ -16,6 +16,13 @@ DB Name: captain
 
 */
 
+--show variables like '%character%';
+
+CREATE DATABASE IF NOT EXISTS captain DEFAULT CHARSET utf8 COLLATE utf8_general_ci;
+
+CREATE USER captain@'%' IDENTIFIED BY 'captain';
+GRANT ALL PRIVILEGES ON captain.* TO captain;
+
 SET FOREIGN_KEY_CHECKS=0;
 
 -- ----------------------------

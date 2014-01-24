@@ -1,5 +1,10 @@
 package com.c306.core.quartz.jms.instance.lsnr;
 
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageListener;
+import javax.jms.TextMessage;
+
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -7,7 +12,7 @@ import com.c306.core.quartz.SchedulerInstanceUtils;
 import com.c306.core.quartz.jms.instance.producer.SchedulerInstanceJmsManager;
 
 
-public class SchedulerInstanceManageReceiver {
+public class SchedulerInstanceManageReceiver implements MessageListener {
 	
 	protected static Logger logger = Logger.getLogger(SchedulerInstanceManageReceiver.class);
 
@@ -39,6 +44,15 @@ public class SchedulerInstanceManageReceiver {
 			logger.warn(message + " ... complete.");
 		}
 		
+	}
+
+	@Override
+	public void onMessage(Message message) {
+		try {
+			handleMessage(((TextMessage)message).getText());
+		} catch (JMSException e) {
+			e.printStackTrace();
+		}
 	}
 	
 

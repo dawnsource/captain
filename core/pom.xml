@@ -204,47 +204,6 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-rt-frontend-jaxrs</artifactId>
-            <version>${cxf.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>spring-core</artifactId>
-                    <groupId>org.springframework</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>spring-web</artifactId>
-                    <groupId>org.springframework</groupId>
-                </exclusion>
-                <exclusion>
-                    <artifactId>wstx-asl</artifactId>
-                    <groupId>org.codehaus.woodstox</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-rt-transports-http</artifactId>
-            <version>${cxf.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>spring-web</artifactId>
-                    <groupId>org.springframework</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-rt-frontend-jaxws</artifactId>
-            <version>${cxf.version}</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>wstx-asl</artifactId>
-                    <groupId>org.codehaus.woodstox</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjweaver</artifactId>
             <version>${aspectj.version}</version>
@@ -271,12 +230,14 @@
             <version>${jmock.version}</version>
             <optional>true</optional>
         </dependency>
+        <!-- 
         <dependency>
             <groupId>org.subethamail</groupId>
             <artifactId>subethasmtp-wiser</artifactId>
             <version>${wiser.version}</version>
             <scope>test</scope>
         </dependency>
+        -->
         <dependency>
             <groupId>velocity</groupId>
             <artifactId>velocity</artifactId>
@@ -371,14 +332,15 @@
         	<artifactId>spring-jms</artifactId>
         	<version>${spring.version}</version>
         </dependency>
-        <!-- jms provider -->
+        
+        <!-- jms provider
         <dependency>
 		  <groupId>com.tibco</groupId>
 		  <artifactId>tibjms</artifactId>
 		  <version>6.0</version>
-		</dependency>
+		</dependency> -->
         
-		<!-- ckeditor -->
+		<!-- ckeditor
 		<dependency>
 			<groupId>com.ckeditor</groupId>
 			<artifactId>ckeditor-java-core</artifactId>
@@ -388,9 +350,9 @@
 			<groupId>org.devlib.schmidt</groupId>
 			<artifactId>imageinfo</artifactId>
 			<version>1.9</version>
-		</dependency>
+		</dependency> -->
 		<!-- END ckeditor -->
-		<!-- ckfinder -->
+		<!-- ckfinder
 		<dependency>
 			<groupId>com.ckfinder</groupId>
 			<artifactId>CKFinder</artifactId>
@@ -405,7 +367,7 @@
 			<groupId>com.ckfinder</groupId>
 			<artifactId>CKFinderPlugin-ImageResize</artifactId>
 			<version>2.0.2</version>
-		</dependency>
+		</dependency> -->
 		<!-- END ckfinder -->
 		
 		<!-- cglib2

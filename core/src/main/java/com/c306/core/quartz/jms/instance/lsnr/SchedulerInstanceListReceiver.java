@@ -2,10 +2,15 @@ package com.c306.core.quartz.jms.instance.lsnr;
 
 import java.util.List;
 
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageListener;
+import javax.jms.ObjectMessage;
+
 import com.c306.core.quartz.SchedulerInfo;
 import com.c306.core.quartz.SchedulerInstanceUtils;
 
-public class SchedulerInstanceListReceiver {
+public class SchedulerInstanceListReceiver implements MessageListener {
 	
 	/**
 	 * 
@@ -25,6 +30,16 @@ public class SchedulerInstanceListReceiver {
 		
 		
 	}
+
+	@Override
+	public void onMessage(Message message) {
+		try {
+			handleMessage((Object[]) ((ObjectMessage)message).getObject());
+		} catch (JMSException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	
 	
 	
