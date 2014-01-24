@@ -1,6 +1,5 @@
 package com.c306.core.springsecurity.users.entity;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -10,11 +9,11 @@ import javax.persistence.Transient;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.c306.core.base.entity.BaseHbmEntity;
 import com.c306.core.springsecurity.roles.entity.SecRole;
-import com.captain.model.User;
 
 /**
  * SecUser entity. @author MyEclipse Persistence Tools
